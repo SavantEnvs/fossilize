@@ -1,0 +1,8 @@
+project: savantenvs/fossilize
+target: fuzz_state_json
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
+  - file://mayhem/fuzz_state_json/testsuite
+cmds:
+  - cmd: /mayhem/fuzz_state_json
+    libfuzzer: true

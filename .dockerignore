@@ -1,0 +1,18 @@
+# .dockerignore for the commit-image build.
+# Goal: bake in the FULL repo (including .git history — the grader uses it),
+# dropping only local build artifacts and editor/OS cruft. Dev image, not minimal.
+
+# ── Build outputs / local cruft (mayhem/build.sh writes under mayhem-build/, not these) ────────
+cmake-build-debug/
+cmake-build-release/
+out/
+*.o
+*.a
+*.so
+
+# ── Editor / OS noise ────────────────────────────────────────────────────────
+.idea
+*.iml
+.DS_Store
+*.swp
+*~

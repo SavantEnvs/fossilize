@@ -1,0 +1,39 @@
+{
+    "version": 6,
+    "applicationInfo": {},
+    "physicalDeviceFeatures": {},
+    "samplers": {
+        "10c1412333927ba9": {
+            "flags": 0,
+            "minFilter": 0,
+            "magFilter": 1,
+            "maxAnisotropy": 1.0,
+            "compareOp": 0,
+            "anisotropyEnable": 0,
+            "mipmapMode": 1,
+            "addressModeU": 2,
+            "addressModeV": 2,
+            "addressModeW": 2,
+            "borderColor": 0,
+            "unnormalizedCoordinates": 0,
+            "compareEnable": 0,
+            "mipLodBias": 0.0,
+            "minLod": 0.0,
+            "maxLod": 0.0
+        }
+    },
+    "setLayouts": {},
+    "pipelineLayouts": {},
+    "shaderModules": {
+        "1c03aa731e00df70": {
+            "flags": 0,
+            "codeSize": 20,
+            "code": "AwIjBwAAAQAAAAAABAAAAAAAAAA="
+        }
+    },
+    "renderPasses": {},
+    "renderPasses2": {},
+    "computePipelines": {},
+    "graphicsPipelines": {},
+    "raytracingPipelines": {}
+}
