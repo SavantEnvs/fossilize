@@ -41,6 +41,8 @@ static void print_help()
 		"\t[--help]\n"
 		"\t[--fossilize-replay <custom path to replayer>]\n"
 		"\t[--robustness]\n"
+		"\t[--vkd3d-proton]\n"
+		"\t[--dxvk]\n"
 		"\t[--pipeline-binary-key]\n");
 }
 
@@ -52,7 +54,7 @@ static constexpr VkApplicationInfo app_info = {
 };
 
 // Basic idea, with a custom dumb device with minimal features enables, study if the full replayer roundtrips properly.
-static VkInstance create_instance()
+static VkInstance create_instance(const VkApplicationInfo *override_app_info)
 {
 	if (volkInitialize() != VK_SUCCESS)
 		return VK_NULL_HANDLE;
@@ -62,7 +64,7 @@ static VkInstance create_instance()
 		return VK_NULL_HANDLE;
 
 	VkInstanceCreateInfo instance_info = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
-	instance_info.pApplicationInfo = &app_info;
+	instance_info.pApplicationInfo = override_app_info ? override_app_info : &app_info;
 
 	VkInstance instance;
 	if (vkCreateInstance(&instance_info, nullptr, &instance) != VK_SUCCESS)
@@ -296,6 +298,8 @@ static bool check_replayer_roundtrip(const std::string &replayer, const char *fo
 
 int main(int argc, char **argv)
 {
+	VkApplicationInfo override_info = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
+	const VkApplicationInfo *override_app_info = nullptr;
 	std::string fossilize_replay = "fossilize-replay";
 	bool pipeline_binary_key = false;
 	bool robustness = false;
@@ -305,6 +309,26 @@ int main(int argc, char **argv)
 	cbs.add("--fossilize-replay", [&](CLIParser &parser) { fossilize_replay = parser.next_string(); });
 	cbs.add("--pipeline-binary-key", [&](CLIParser &) { pipeline_binary_key = true; });
 	cbs.add("--robustness", [&](CLIParser &) { robustness = true; });
+	cbs.add("--vkd3d-proton", [&](CLIParser &)
+	{
+		override_app_info = &override_info;
+		override_info.apiVersion = VK_API_VERSION_1_3;
+		override_info.pEngineName = "vkd3d";
+		// 3.0 will fail due to maintenance8 promotion.
+		override_info.engineVersion = VK_MAKE_VERSION(2, 14, 0);
+		override_info.pApplicationName = "sifter";
+		LOGI("Overriding with vkd3d app info.\n");
+	});
+	cbs.add("--dxvk", [&](CLIParser &)
+	{
+		override_app_info = &override_info;
+		override_info.apiVersion = VK_API_VERSION_1_4;
+		override_info.pEngineName = "DXVK";
+		// 3.1 will fail due to maintenance8 promotion.
+		override_info.engineVersion = VK_MAKE_VERSION(2, 7, 0);
+		override_info.pApplicationName = "sifter";
+		LOGI("Overriding with DXVK app info.\n");
+	});
 
 	CLIParser parser(std::move(cbs), argc - 1, argv + 1);
 	if (!parser.parse())
@@ -318,7 +342,7 @@ int main(int argc, char **argv)
 		return EXIT_SUCCESS;
 	}
 
-	VkInstance instance = create_instance();
+	VkInstance instance = create_instance(override_app_info);
 
 	VkPhysicalDeviceRobustness2FeaturesKHR robustness2 = {
 		VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_KHR, nullptr,
@@ -341,7 +365,7 @@ int main(int argc, char **argv)
 		recorder.init_recording_synchronized(db.get());
 		recorder.set_database_enable_application_feature_links(false);
 
-		if (!recorder.record_application_info(app_info))
+		if (!recorder.record_application_info(override_app_info ? *override_app_info : app_info))
 			return EXIT_FAILURE;
 		if (!recorder.record_physical_device_features(&features2))
 			return EXIT_FAILURE;

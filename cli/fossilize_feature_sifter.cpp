@@ -36,7 +36,9 @@ static void print_help()
 {
 	LOGI("fossilize-feature-sifter\n"
 		"\t[--help]\n"
-		"\t[--block-extension <ext>]\n");
+		"\t[--block-extension <ext>]\n"
+		"\t[--vkd3d-proton]\n"
+		"\t[--dxvk]\n");
 }
 
 struct Instance
@@ -46,7 +48,7 @@ struct Instance
 	std::vector<const char *> extensions;
 };
 
-static bool create_instance(Instance &instance)
+static bool create_instance(Instance &instance, const VkApplicationInfo *override_app_info)
 {
 	if (volkInitialize() != VK_SUCCESS)
 		return false;
@@ -67,7 +69,7 @@ static bool create_instance(Instance &instance)
 		instance_version,
 	};
 
-	instance_info.pApplicationInfo = &app_info;
+	instance_info.pApplicationInfo = override_app_info ? override_app_info : &app_info;
 
 	uint32_t count;
 	vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
@@ -185,11 +187,31 @@ static bool get_pipeline_key(VkPhysicalDevice gpu, const std::vector<const char 
 
 int main(int argc, char **argv)
 {
+	VkApplicationInfo override_info = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
 	std::vector<std::string> ban_list;
 	CLICallbacks cbs;
+	const VkApplicationInfo *override_app_info = nullptr;
 
 	cbs.add("--help", [&](CLIParser &parser) { parser.end(); });
 	cbs.add("--block-extension", [&](CLIParser &parser) { ban_list.emplace_back(parser.next_string()); });
+	cbs.add("--vkd3d-proton", [&](CLIParser &)
+	{
+		override_app_info = &override_info;
+		override_info.apiVersion = VK_API_VERSION_1_3;
+		override_info.pEngineName = "vkd3d";
+		override_info.engineVersion = VK_MAKE_VERSION(3, 1, 0);
+		override_info.pApplicationName = "sifter";
+		LOGI("Overriding with vkd3d app info.\n");
+	});
+	cbs.add("--dxvk", [&](CLIParser &)
+	{
+		override_app_info = &override_info;
+		override_info.apiVersion = VK_API_VERSION_1_4;
+		override_info.pEngineName = "DXVK";
+		override_info.engineVersion = VK_MAKE_VERSION(3, 0, 0);
+		override_info.pApplicationName = "sifter";
+		LOGI("Overriding with DXVK app info.\n");
+	});
 
 	CLIParser parser(std::move(cbs), argc - 1, argv + 1);
 	if (!parser.parse())
@@ -204,7 +226,7 @@ int main(int argc, char **argv)
 	}
 
 	Instance instance;
-	if (!create_instance(instance))
+	if (!create_instance(instance, override_app_info))
 		return EXIT_FAILURE;
 
 	VkPhysicalDevice gpu;
