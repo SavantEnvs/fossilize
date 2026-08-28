@@ -248,6 +248,16 @@ static bool application_info_promote_maintenance8(const VkApplicationInfo *app_i
 	return false;
 }
 
+static bool application_info_promote_descriptor_heap(const VkApplicationInfo *app_info)
+{
+	if (!app_info || !app_info->pEngineName)
+		return true;
+
+	// NVIDIA driver keys on descriptorHeap + vkd3d to apply janky workarounds.
+	// It's not known to be relevant for other cases, so just enable the feature if present.
+	return strcmp("vkd3d", app_info->pEngineName) != 0;
+}
+
 static void pipeline_binary_key_to_str(char (&str)[VK_MAX_PIPELINE_BINARY_KEY_SIZE_KHR * 2 + 1], const VkPipelineBinaryKeyKHR &key)
 {
 	str[0] = '\0';
@@ -472,6 +482,7 @@ bool VulkanDevice::init_device(const Options &opts)
 	VkPhysicalDeviceRobustness2FeaturesEXT replacement_robustness2;
 	VkPhysicalDeviceFragmentShadingRateFeaturesKHR replacement_fragment_shading_rate;
 	VkPhysicalDeviceMaintenance8FeaturesKHR replacement_maintenance8;
+	VkPhysicalDeviceDescriptorHeapFeaturesEXT replacement_heap;
 
 	const auto begin_replacement = [&](void *pnext) {
 		if (&replacement_pdf2 != requested_pdf2)
@@ -517,6 +528,15 @@ bool VulkanDevice::init_device(const Options &opts)
 			replacement_maintenance8 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_8_FEATURES_KHR };
 			begin_replacement(&replacement_maintenance8);
 			reset_features(replacement_maintenance8, VK_TRUE);
+		}
+
+		if (application_info_promote_descriptor_heap(opts.application_info) &&
+		    find_pnext<VkPhysicalDeviceDescriptorHeapFeaturesEXT>(
+			    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_HEAP_FEATURES_EXT, opts.features->pNext) == nullptr)
+		{
+			replacement_heap = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_HEAP_FEATURES_EXT };
+			begin_replacement(&replacement_heap);
+			reset_features(replacement_heap, VK_TRUE);
 		}
 	}
 

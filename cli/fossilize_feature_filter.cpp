@@ -326,6 +326,40 @@ static void filter_feature_enablement(
 			features.maintenance8.maintenance8 = features.maintenance8.maintenance8 && maintenance8->maintenance8;
 		else
 			reset_features(features.maintenance8, VK_FALSE);
+
+		const auto *heap = find_pnext<VkPhysicalDeviceDescriptorHeapFeaturesEXT>(
+				VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_HEAP_FEATURES_EXT,
+				target_features->pNext);
+
+		if (heap)
+		{
+			features.descriptor_heap.descriptorHeap =
+				features.descriptor_heap.descriptorHeap && heap->descriptorHeap;
+			features.descriptor_heap.descriptorHeapCaptureReplay =
+				features.descriptor_heap.descriptorHeapCaptureReplay && heap->descriptorHeapCaptureReplay;
+		}
+		else
+		{
+			reset_features(features.descriptor_heap, VK_FALSE);
+		}
+
+		const auto *omm = find_pnext<VkPhysicalDeviceOpacityMicromapFeaturesEXT>(
+				VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT,
+				target_features->pNext);
+
+		if (omm)
+		{
+			features.opacity_micromap.micromap =
+				features.opacity_micromap.micromap && omm->micromap;
+			features.opacity_micromap.micromapCaptureReplay =
+				features.opacity_micromap.micromapCaptureReplay && omm->micromapCaptureReplay;
+			features.opacity_micromap.micromapHostCommands =
+				features.opacity_micromap.micromapHostCommands && omm->micromapHostCommands;
+		}
+		else
+		{
+			reset_features(features.opacity_micromap, VK_FALSE);
+		}
 	}
 	else
 	{
@@ -342,6 +376,8 @@ static void filter_feature_enablement(
 		reset_features(features.image_2d_view_of_3d, VK_FALSE);
 		reset_features(features.pipeline_robustness, VK_FALSE);
 		reset_features(features.maintenance8, VK_FALSE);
+		reset_features(features.descriptor_heap, VK_FALSE);
+		reset_features(features.opacity_micromap, VK_FALSE);
 	}
 }
 
@@ -525,6 +561,28 @@ static void filter_active_extensions(VkPhysicalDeviceFeatures2 &pdf,
 			if (feature->maintenance8 == VK_FALSE)
 			{
 				remove_extension(active_extensions, out_extension_count, VK_KHR_MAINTENANCE_8_EXTENSION_NAME);
+				accept = false;
+			}
+			break;
+		}
+
+		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_HEAP_FEATURES_EXT:
+		{
+			auto *feature = reinterpret_cast<VkPhysicalDeviceDescriptorHeapFeaturesEXT *>(s);
+			if (feature->descriptorHeap == VK_FALSE && feature->descriptorHeapCaptureReplay == VK_FALSE)
+			{
+				remove_extension(active_extensions, out_extension_count, VK_EXT_DESCRIPTOR_HEAP_EXTENSION_NAME);
+				accept = false;
+			}
+			break;
+		}
+
+		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT:
+		{
+			auto *feature = reinterpret_cast<VkPhysicalDeviceOpacityMicromapFeaturesEXT *>(s);
+			if (feature->micromap == VK_FALSE && feature->micromapCaptureReplay == VK_FALSE && feature->micromapHostCommands == VK_FALSE)
+			{
+				remove_extension(active_extensions, out_extension_count, VK_EXT_OPACITY_MICROMAP_EXTENSION_NAME);
 				accept = false;
 			}
 			break;

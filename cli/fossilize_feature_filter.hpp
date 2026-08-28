@@ -361,4 +361,17 @@ static inline void reset_features(VkPhysicalDeviceMaintenance8FeaturesKHR &featu
 {
 	features.maintenance8 = state;
 }
+
+static inline void reset_features(VkPhysicalDeviceDescriptorHeapFeaturesEXT &features, VkBool32 state)
+{
+	features.descriptorHeap = state;
+	features.descriptorHeapCaptureReplay = state;
+}
+
+static inline void reset_features(VkPhysicalDeviceOpacityMicromapFeaturesEXT &features, VkBool32 state)
+{
+	features.micromap = state;
+	features.micromapCaptureReplay = state;
+	features.micromapHostCommands = state;
+}
 }
