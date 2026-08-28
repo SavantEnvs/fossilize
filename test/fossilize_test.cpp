@@ -4170,6 +4170,12 @@ static bool test_pdf_recording()
 	VkPhysicalDeviceMaintenance8FeaturesKHR maint8 = {
 		VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_8_FEATURES_KHR, nullptr, 90,
 	};
+	VkPhysicalDeviceDescriptorHeapFeaturesEXT heap = {
+		VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_HEAP_FEATURES_EXT, nullptr, 50,
+	};
+	VkPhysicalDeviceOpacityMicromapFeaturesEXT micromap = {
+		VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT, nullptr, 60, 61, 62,
+	};
 	VkPhysicalDeviceVulkan14Features vk14 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES };
 	vk14.pipelineRobustness = VK_TRUE;
 
@@ -4201,7 +4207,7 @@ static bool test_pdf_recording()
 	}
 
 	{
-		constexpr size_t hash_count = 14;
+		constexpr size_t hash_count = 16;
 		Hash hashes[hash_count] = {};
 
 		pdf2.pNext = nullptr;
@@ -4246,6 +4252,12 @@ static bool test_pdf_recording()
 		pipeline_robustness.pNext = &maint8;
 		if (!test_pdf_recording(&pdf2, hashes[13]))
 			return false;
+		maint8.pNext = &heap;
+		if (!test_pdf_recording(&pdf2, hashes[14]))
+			return false;
+		heap.pNext = &micromap;
+		if (!test_pdf_recording(&pdf2, hashes[15]))
+			return false;
 
 		// Make sure all of these are serialized.
 		for (unsigned i = 1; i < hash_count; i++)
@@ -4253,7 +4265,7 @@ static bool test_pdf_recording()
 				return false;
 
 		// If we move PDF2 last, hash should still be invariant.
-		maint8.pNext = &pdf2;
+		micromap.pNext = &pdf2;
 		pdf2.pNext = nullptr;
 		if (!test_pdf_recording(&robustness2, hashes[0]))
 			return false;

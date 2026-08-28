@@ -356,6 +356,8 @@ struct StateReplayer::Impl
 	bool parse_2d_view_of_3d_features(const Value &state, VkPhysicalDeviceImage2DViewOf3DFeaturesEXT **out_features) FOSSILIZE_WARN_UNUSED;
 	bool parse_pipeline_robustness_features(const Value &state, VkPhysicalDevicePipelineRobustnessFeatures **out_features) FOSSILIZE_WARN_UNUSED;
 	bool parse_maintenance8_features(const Value &state, VkPhysicalDeviceMaintenance8FeaturesKHR **out_features) FOSSILIZE_WARN_UNUSED;
+	bool parse_descriptor_heap_features(const Value &state, VkPhysicalDeviceDescriptorHeapFeaturesEXT **out_features) FOSSILIZE_WARN_UNUSED;
+	bool parse_opacity_micromap_ext_features(const Value &state, VkPhysicalDeviceOpacityMicromapFeaturesEXT **out_features) FOSSILIZE_WARN_UNUSED;
 
 	bool parse_color_write(const Value &state, VkPipelineColorWriteCreateInfoEXT **out_info) FOSSILIZE_WARN_UNUSED;
 	bool parse_sample_locations(const Value &state, VkPipelineSampleLocationsStateCreateInfoEXT **out_info) FOSSILIZE_WARN_UNUSED;
@@ -779,6 +781,23 @@ static void hash_pnext_struct(const StateRecorder *,
 }
 
 static void hash_pnext_struct(const StateRecorder *,
+							  Hasher &h,
+							  const VkPhysicalDeviceDescriptorHeapFeaturesEXT &info)
+{
+	h.u32(info.descriptorHeap);
+	h.u32(info.descriptorHeapCaptureReplay);
+}
+
+static void hash_pnext_struct(const StateRecorder *,
+							  Hasher &h,
+							  const VkPhysicalDeviceOpacityMicromapFeaturesEXT &info)
+{
+	h.u32(info.micromap);
+	h.u32(info.micromapCaptureReplay);
+	h.u32(info.micromapHostCommands);
+}
+
+static void hash_pnext_struct(const StateRecorder *,
                               Hasher &h,
                               const VkPipelineCreateFlags2CreateInfoKHR &info)
 {
@@ -1164,6 +1183,14 @@ static bool hash_pnext_chain_pdf2(const StateRecorder *recorder, Hasher &h, cons
 
 		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_8_FEATURES_KHR:
 			hash_pnext_struct(recorder, h, *static_cast<const VkPhysicalDeviceMaintenance8FeaturesKHR *>(pNext));
+			break;
+
+		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_HEAP_FEATURES_EXT:
+			hash_pnext_struct(recorder, h, *static_cast<const VkPhysicalDeviceDescriptorHeapFeaturesEXT *>(pNext));
+			break;
+
+		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT:
+			hash_pnext_struct(recorder, h, *static_cast<const VkPhysicalDeviceOpacityMicromapFeaturesEXT *>(pNext));
 			break;
 
 		default:
@@ -6052,6 +6079,27 @@ bool StateReplayer::Impl::parse_maintenance8_features(
 	return true;
 }
 
+bool StateReplayer::Impl::parse_descriptor_heap_features(
+		const Value &state, VkPhysicalDeviceDescriptorHeapFeaturesEXT **out_features)
+{
+	auto *features = allocator.allocate_cleared<VkPhysicalDeviceDescriptorHeapFeaturesEXT>();
+	*out_features = features;
+	features->descriptorHeap = state["descriptorHeap"].GetUint();
+	features->descriptorHeapCaptureReplay = state["descriptorHeapCaptureReplay"].GetUint();
+	return true;
+}
+
+bool StateReplayer::Impl::parse_opacity_micromap_ext_features(
+		const Value &state, VkPhysicalDeviceOpacityMicromapFeaturesEXT **out_features)
+{
+	auto *features = allocator.allocate_cleared<VkPhysicalDeviceOpacityMicromapFeaturesEXT>();
+	*out_features = features;
+	features->micromap = state["micromap"].GetUint();
+	features->micromapCaptureReplay = state["micromapCaptureReplay"].GetUint();
+	features->micromapHostCommands = state["micromapHostCommands"].GetUint();
+	return true;
+}
+
 bool StateReplayer::Impl::parse_pnext_chain_pdf2(const Value &pnext, void **outpNext)
 {
 	VkBaseInStructure *ret = nullptr;
@@ -6170,6 +6218,24 @@ bool StateReplayer::Impl::parse_pnext_chain_pdf2(const Value &pnext, void **outp
 			if (!parse_maintenance8_features(next, &maint8))
 				return false;
 			new_struct = reinterpret_cast<VkBaseInStructure *>(maint8);
+			break;
+		}
+
+		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_HEAP_FEATURES_EXT:
+		{
+			VkPhysicalDeviceDescriptorHeapFeaturesEXT *heap = nullptr;
+			if (!parse_descriptor_heap_features(next, &heap))
+				return false;
+			new_struct = reinterpret_cast<VkBaseInStructure *>(heap);
+			break;
+		}
+
+		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT:
+		{
+			VkPhysicalDeviceOpacityMicromapFeaturesEXT *micromap = nullptr;
+			if (!parse_opacity_micromap_ext_features(next, &micromap))
+				return false;
+			new_struct = reinterpret_cast<VkBaseInStructure *>(micromap);
 			break;
 		}
 
@@ -7945,6 +8011,20 @@ bool StateRecorder::Impl::copy_pnext_chain_pdf2(const void *pNext, ScratchAlloca
 		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_8_FEATURES_KHR:
 		{
 			auto *ci = static_cast<const VkPhysicalDeviceMaintenance8FeaturesKHR *>(pNext);
+			*ppNext = static_cast<VkBaseInStructure *>(copy_pnext_struct_simple(ci, alloc));
+			break;
+		}
+
+		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_HEAP_FEATURES_EXT:
+		{
+			auto *ci = static_cast<const VkPhysicalDeviceDescriptorHeapFeaturesEXT *>(pNext);
+			*ppNext = static_cast<VkBaseInStructure *>(copy_pnext_struct_simple(ci, alloc));
+			break;
+		}
+
+		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT:
+		{
+			auto *ci = static_cast<const VkPhysicalDeviceOpacityMicromapFeaturesEXT *>(pNext);
 			*ppNext = static_cast<VkBaseInStructure *>(copy_pnext_struct_simple(ci, alloc));
 			break;
 		}
@@ -11809,6 +11889,27 @@ static bool json_value(const VkPhysicalDeviceMaintenance8FeaturesKHR &create_inf
 	return true;
 }
 
+static bool json_value(const VkPhysicalDeviceDescriptorHeapFeaturesEXT &create_info, Allocator &alloc, Value *out_value)
+{
+	Value value(kObjectType);
+	value.AddMember("sType", create_info.sType, alloc);
+	value.AddMember("descriptorHeap", create_info.descriptorHeap, alloc);
+	value.AddMember("descriptorHeapCaptureReplay", create_info.descriptorHeapCaptureReplay, alloc);
+	*out_value = value;
+	return true;
+}
+
+static bool json_value(const VkPhysicalDeviceOpacityMicromapFeaturesEXT &create_info, Allocator &alloc, Value *out_value)
+{
+	Value value(kObjectType);
+	value.AddMember("sType", create_info.sType, alloc);
+	value.AddMember("micromap", create_info.micromap, alloc);
+	value.AddMember("micromapCaptureReplay", create_info.micromapCaptureReplay, alloc);
+	value.AddMember("micromapHostCommands", create_info.micromapHostCommands, alloc);
+	*out_value = value;
+	return true;
+}
+
 static bool pnext_chain_pdf2_json_value(const void *pNext, Allocator &alloc, Value *out_value)
 {
 	Value nexts(kArrayType);
@@ -11876,6 +11977,16 @@ static bool pnext_chain_pdf2_json_value(const void *pNext, Allocator &alloc, Val
 
 		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_8_FEATURES_KHR:
 			if (!json_value(*static_cast<const VkPhysicalDeviceMaintenance8FeaturesKHR *>(pNext), alloc, &next))
+				return false;
+			break;
+
+		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_HEAP_FEATURES_EXT:
+			if (!json_value(*static_cast<const VkPhysicalDeviceDescriptorHeapFeaturesEXT *>(pNext), alloc, &next))
+				return false;
+			break;
+
+		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT:
+			if (!json_value(*static_cast<const VkPhysicalDeviceOpacityMicromapFeaturesEXT *>(pNext), alloc, &next))
 				return false;
 			break;
 
@@ -12513,6 +12624,8 @@ static const void *pnext_chain_pdf2_skip_ignored_entries(const void *pNext)
 		// NV uses these.
 		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_FEATURES:
 		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_8_FEATURES_KHR:
+		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_HEAP_FEATURES_EXT:
+		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT:
 			ignored = false;
 			break;
 
