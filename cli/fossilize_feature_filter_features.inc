@@ -150,3 +150,4 @@ FE(MAINTENANCE_11, maintenance11, KHR);
 FE(CUSTOM_RESOLVE, custom_resolve, EXT);
 FE(COOPERATIVE_MATRIX_CONVERSION, cooperative_matrix_conversion, QCOM);
 FE(SHADER_MIXED_FLOAT_DOT_PRODUCT, shader_mixed_dot_product, VALVE);
+FE(COOPERATIVE_MATRIX_MAINTENANCE_1, cooperative_matrix_maintenance1, EXT);

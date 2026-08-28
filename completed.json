@@ -367,6 +367,12 @@
 		"DotProductFloat16AccFloat32VALVE",
 		"DotProductFloat16AccFloat16VALVE",
 		"DotProductBFloat16AccVALVE",
-		"DotProductFloat8AccFloat32VALVE"
+		"DotProductFloat8AccFloat32VALVE",
+		"CooperativeMatrixReductionsEXT",
+		"CooperativeMatrixConversionsEXT",
+		"CooperativeMatrixPerElementOperationsEXT",
+		"CooperativeMatrixGetCoordinateEXT",
+		"RayTracingOpacityMicromapExecutionModeKHR",
+		"RayTracingOpacityMicromapKHR"
 	]
 }

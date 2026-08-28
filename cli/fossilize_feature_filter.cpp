@@ -2780,8 +2780,9 @@ bool FeatureFilter::Impl::validate_module_capability(spv::Capability cap) const
 		return features.ray_tracing_maintenance1.rayTracingMaintenance1 == VK_TRUE;
 	case spv::CapabilityRayTracingMotionBlurNV:
 		return features.ray_tracing_motion_blur_nv.rayTracingMotionBlur == VK_TRUE;
-	case spv::CapabilityRayTracingOpacityMicromapEXT:
-		return enabled_extensions.count(VK_EXT_OPACITY_MICROMAP_EXTENSION_NAME) != 0;
+	case spv::CapabilityRayTracingOpacityMicromapKHR:
+		return enabled_extensions.count(VK_EXT_OPACITY_MICROMAP_EXTENSION_NAME) != 0 ||
+		       features.opacity_micromap_khr.micromap == VK_TRUE;
 	case spv::CapabilityTextureSampleWeightedQCOM:
 		return features.image_processing_qcom.textureSampleWeighted == VK_TRUE;
 	case spv::CapabilityTextureBoxFilterQCOM:
@@ -2827,12 +2828,18 @@ bool FeatureFilter::Impl::validate_module_capability(spv::Capability cap) const
 		return features.bfloat16.shaderBFloat16CooperativeMatrix == VK_TRUE;
 	case spv::CapabilityTensorAddressingNV:
 		return features.cooperative_matrix2_nv.cooperativeMatrixTensorAddressing == VK_TRUE;
-	case spv::CapabilityCooperativeMatrixReductionsNV:
-		return features.cooperative_matrix2_nv.cooperativeMatrixReductions == VK_TRUE;
+	case spv::CapabilityCooperativeMatrixReductionsEXT:
+		return features.cooperative_matrix2_nv.cooperativeMatrixReductions == VK_TRUE ||
+		       features.cooperative_matrix_maintenance1.cooperativeMatrixReductions == VK_TRUE;
 	case spv::CapabilityCooperativeMatrixConversionsNV:
 		return features.cooperative_matrix2_nv.cooperativeMatrixConversions == VK_TRUE;
-	case spv::CapabilityCooperativeMatrixPerElementOperationsNV:
-		return features.cooperative_matrix2_nv.cooperativeMatrixPerElementOperations == VK_TRUE;
+	case spv::CapabilityCooperativeMatrixConversionsEXT:
+		return features.cooperative_matrix_maintenance1.cooperativeMatrixConversions == VK_TRUE;
+	case spv::CapabilityCooperativeMatrixPerElementOperationsEXT:
+		return features.cooperative_matrix2_nv.cooperativeMatrixPerElementOperations == VK_TRUE ||
+		       features.cooperative_matrix_maintenance1.cooperativeMatrixPerElementOperations == VK_TRUE;
+	case spv::CapabilityCooperativeMatrixGetCoordinateEXT:
+		return features.cooperative_matrix_maintenance1.cooperativeMatrixGetCoordinate == VK_TRUE;
 	case spv::CapabilityCooperativeMatrixTensorAddressingNV:
 		return features.cooperative_matrix2_nv.cooperativeMatrixTensorAddressing == VK_TRUE;
 	case spv::CapabilityCooperativeMatrixBlockLoadsNV:
@@ -2885,6 +2892,8 @@ bool FeatureFilter::Impl::validate_module_capability(spv::Capability cap) const
 		return features.shader_mixed_dot_product.shaderMixedFloatDotProductBFloat16Acc == VK_TRUE;
 	case spv::CapabilityDotProductFloat8AccFloat32VALVE:
 		return features.shader_mixed_dot_product.shaderMixedFloatDotProductFloat8AccFloat32 == VK_TRUE;
+	case spv::CapabilityRayTracingOpacityMicromapExecutionModeKHR:
+		return features.opacity_micromap_khr.micromap == VK_TRUE;
 
 	default:
 		LOGE("Unrecognized SPIR-V capability %u, treating as unsupported.\n", unsigned(cap));

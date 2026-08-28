@@ -160,6 +160,7 @@ struct VulkanFeatures
 	VkPhysicalDeviceShaderMixedFloatDotProductFeaturesVALVE shader_mixed_dot_product;
 	VkPhysicalDeviceMaintenance8FeaturesKHR maintenance8;
 	VkPhysicalDeviceMaintenance11FeaturesKHR maintenance11;
+	VkPhysicalDeviceCooperativeMatrixMaintenance1FeaturesEXT cooperative_matrix_maintenance1;
 
 	struct
 	{
