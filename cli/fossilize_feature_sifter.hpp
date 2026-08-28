@@ -9,6 +9,7 @@ static const struct {
 	{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PUSH_CONSTANT_BANK_FEATURES_NV, sizeof(VkPhysicalDevicePushConstantBankFeaturesNV) },
 	{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_COMPUTE_FEATURES_NV, sizeof(VkPhysicalDeviceDeviceGeneratedCommandsComputeFeaturesNV) },
 	{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES, sizeof(VkPhysicalDevicePrivateDataFeatures) },
+	{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIVATE_DATA_BASE_HANDLE_FEATURES_NV, sizeof(VkPhysicalDevicePrivateDataBaseHandleFeaturesNV) },
 	{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CLUSTER_ACCELERATION_STRUCTURE_FEATURES_NV, sizeof(VkPhysicalDeviceClusterAccelerationStructureFeaturesNV) },
 	{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES, sizeof(VkPhysicalDeviceVariablePointersFeatures) },
 	{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES, sizeof(VkPhysicalDeviceMultiviewFeatures) },
@@ -272,6 +273,7 @@ static const struct {
 	{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DATA_GRAPH_OPTICAL_FLOW_FEATURES_ARM, sizeof(VkPhysicalDeviceDataGraphOpticalFlowFeaturesARM) },
 	{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_TILING_CONTROL_FEATURES_EXT, sizeof(VkPhysicalDeviceImageTilingControlFeaturesEXT) },
 	{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OCP_MICROSCALING_TYPES_FEATURES_EXT, sizeof(VkPhysicalDeviceShaderOCPMicroscalingTypesFeaturesEXT) },
+	{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_MAINTENANCE_1_FEATURES_EXT, sizeof(VkPhysicalDeviceCooperativeMatrixMaintenance1FeaturesEXT) },
 };
 
 struct ExtensionRequirements {
@@ -287,6 +289,7 @@ struct ExistingFeatureStructs {
 	VkPhysicalDevicePushConstantBankFeaturesNV mPushConstantBankFeaturesNV = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PUSH_CONSTANT_BANK_FEATURES_NV };
 	VkPhysicalDeviceDeviceGeneratedCommandsComputeFeaturesNV mDeviceGeneratedCommandsComputeFeaturesNV = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_COMPUTE_FEATURES_NV };
 	VkPhysicalDevicePrivateDataFeatures mPrivateDataFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES };
+	VkPhysicalDevicePrivateDataBaseHandleFeaturesNV mPrivateDataBaseHandleFeaturesNV = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIVATE_DATA_BASE_HANDLE_FEATURES_NV };
 	VkPhysicalDeviceClusterAccelerationStructureFeaturesNV mClusterAccelerationStructureFeaturesNV = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CLUSTER_ACCELERATION_STRUCTURE_FEATURES_NV };
 	VkPhysicalDeviceVariablePointersFeatures mVariablePointersFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES };
 	VkPhysicalDeviceMultiviewFeatures mMultiviewFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES };
@@ -550,11 +553,13 @@ struct ExistingFeatureStructs {
 	VkPhysicalDeviceDataGraphOpticalFlowFeaturesARM mDataGraphOpticalFlowFeaturesARM = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DATA_GRAPH_OPTICAL_FLOW_FEATURES_ARM };
 	VkPhysicalDeviceImageTilingControlFeaturesEXT mImageTilingControlFeaturesEXT = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_TILING_CONTROL_FEATURES_EXT };
 	VkPhysicalDeviceShaderOCPMicroscalingTypesFeaturesEXT mShaderOCPMicroscalingTypesFeaturesEXT = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OCP_MICROSCALING_TYPES_FEATURES_EXT };
+	VkPhysicalDeviceCooperativeMatrixMaintenance1FeaturesEXT mCooperativeMatrixMaintenance1FeaturesEXT = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_MAINTENANCE_1_FEATURES_EXT };
 	void reset_pnext() {
 		mDeviceGeneratedCommandsFeaturesNV.pNext = nullptr;
 		mPushConstantBankFeaturesNV.pNext = nullptr;
 		mDeviceGeneratedCommandsComputeFeaturesNV.pNext = nullptr;
 		mPrivateDataFeatures.pNext = nullptr;
+		mPrivateDataBaseHandleFeaturesNV.pNext = nullptr;
 		mClusterAccelerationStructureFeaturesNV.pNext = nullptr;
 		mVariablePointersFeatures.pNext = nullptr;
 		mMultiviewFeatures.pNext = nullptr;
@@ -818,6 +823,7 @@ struct ExistingFeatureStructs {
 		mDataGraphOpticalFlowFeaturesARM.pNext = nullptr;
 		mImageTilingControlFeaturesEXT.pNext = nullptr;
 		mShaderOCPMicroscalingTypesFeaturesEXT.pNext = nullptr;
+		mCooperativeMatrixMaintenance1FeaturesEXT.pNext = nullptr;
 	}
 
 	bool get_extension_requirements(const std::string &ext, ExtensionRequirements &dep) {
@@ -3448,7 +3454,7 @@ struct ExistingFeatureStructs {
 		if (ext == "VK_EXT_image_compression_control_swapchain") {
 			dep = {};
 			dep.minimum_api_version = VK_VERSION_1_0;
-			static const char * const exts[] = { "VK_EXT_image_compression_control" };
+			static const char * const exts[] = { "VK_EXT_image_compression_control", "VK_KHR_swapchain" };
 			dep.num_extension_dependencies = uint32_t(sizeof(exts) / sizeof(exts[0]));
 			dep.extension_dependencies = exts;
 			dep.primary_feature = &mImageCompressionControlSwapchainFeaturesEXT;
@@ -4564,6 +4570,16 @@ struct ExistingFeatureStructs {
 			return true;
 		}
 
+		if (ext == "VK_EXT_cooperative_matrix_maintenance1") {
+			dep = {};
+			dep.minimum_api_version = VK_VERSION_1_0;
+			static const char * const exts[] = { "VK_KHR_cooperative_matrix" };
+			dep.num_extension_dependencies = uint32_t(sizeof(exts) / sizeof(exts[0]));
+			dep.extension_dependencies = exts;
+			dep.primary_feature = &mCooperativeMatrixMaintenance1FeaturesEXT;
+			return true;
+		}
+
 		if (ext == "VK_EXT_shader_subgroup_partitioned") {
 			dep = {};
 			dep.minimum_api_version = VK_VERSION_1_1;
@@ -4613,7 +4629,10 @@ struct ExistingFeatureStructs {
 
 		if (ext == "VK_ARM_data_graph_neural_accelerator_statistics") {
 			dep = {};
-			dep.minimum_api_version = VK_VERSION_1_0;
+			dep.minimum_api_version = VK_VERSION_1_1;
+			static const char * const exts[] = { "VK_KHR_get_physical_device_properties2" };
+			dep.num_extension_dependencies = uint32_t(sizeof(exts) / sizeof(exts[0]));
+			dep.extension_dependencies = exts;
 			dep.primary_feature = &mDataGraphNeuralAcceleratorStatisticsFeaturesARM;
 			return true;
 		}
@@ -4630,7 +4649,10 @@ struct ExistingFeatureStructs {
 
 		if (ext == "VK_EXT_image_tiling_control") {
 			dep = {};
-			dep.minimum_api_version = VK_VERSION_1_0;
+			dep.minimum_api_version = VK_VERSION_1_1;
+			static const char * const exts[] = { "VK_KHR_get_physical_device_properties2" };
+			dep.num_extension_dependencies = uint32_t(sizeof(exts) / sizeof(exts[0]));
+			dep.extension_dependencies = exts;
 			dep.primary_feature = &mImageTilingControlFeaturesEXT;
 			return true;
 		}
@@ -4642,6 +4664,16 @@ struct ExistingFeatureStructs {
 			dep.num_extension_dependencies = uint32_t(sizeof(exts) / sizeof(exts[0]));
 			dep.extension_dependencies = exts;
 			dep.primary_feature = &mCooperativeMatrixDecodeVectorFeaturesNV;
+			return true;
+		}
+
+		if (ext == "VK_NV_private_data_base_handle") {
+			dep = {};
+			dep.minimum_api_version = VK_VERSION_1_3;
+			static const char * const exts[] = { "VK_EXT_private_data" };
+			dep.num_extension_dependencies = uint32_t(sizeof(exts) / sizeof(exts[0]));
+			dep.extension_dependencies = exts;
+			dep.primary_feature = &mPrivateDataBaseHandleFeaturesNV;
 			return true;
 		}
 
