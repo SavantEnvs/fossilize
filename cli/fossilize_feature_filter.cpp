@@ -349,16 +349,16 @@ static void filter_feature_enablement(
 
 		if (omm)
 		{
-			features.opacity_micromap.micromap =
-				features.opacity_micromap.micromap && omm->micromap;
-			features.opacity_micromap.micromapCaptureReplay =
-				features.opacity_micromap.micromapCaptureReplay && omm->micromapCaptureReplay;
-			features.opacity_micromap.micromapHostCommands =
-				features.opacity_micromap.micromapHostCommands && omm->micromapHostCommands;
+			features.opacity_micromap_ext.micromap =
+				features.opacity_micromap_ext.micromap && omm->micromap;
+			features.opacity_micromap_ext.micromapCaptureReplay =
+				features.opacity_micromap_ext.micromapCaptureReplay && omm->micromapCaptureReplay;
+			features.opacity_micromap_ext.micromapHostCommands =
+				features.opacity_micromap_ext.micromapHostCommands && omm->micromapHostCommands;
 		}
 		else
 		{
-			reset_features(features.opacity_micromap, VK_FALSE);
+			reset_features(features.opacity_micromap_ext, VK_FALSE);
 		}
 	}
 	else
@@ -377,7 +377,7 @@ static void filter_feature_enablement(
 		reset_features(features.pipeline_robustness, VK_FALSE);
 		reset_features(features.maintenance8, VK_FALSE);
 		reset_features(features.descriptor_heap, VK_FALSE);
-		reset_features(features.opacity_micromap, VK_FALSE);
+		reset_features(features.opacity_micromap_ext, VK_FALSE);
 	}
 }
 
@@ -2296,7 +2296,10 @@ bool FeatureFilter::Impl::descriptor_set_layout_is_supported(const VkDescriptorS
 bool FeatureFilter::Impl::pipeline_layout_is_supported(const VkPipelineLayoutCreateInfo *info) const
 {
 	// Only allow flags we recognize and validate.
-	constexpr VkPipelineLayoutCreateFlags supported_flags = VK_PIPELINE_LAYOUT_CREATE_INDEPENDENT_SETS_BIT_EXT;
+	constexpr VkPipelineLayoutCreateFlags supported_flags =
+			VK_PIPELINE_LAYOUT_CREATE_INDEPENDENT_SETS_BIT_EXT |
+			VK_PIPELINE_LAYOUT_CREATE_NO_TASK_SHADER_BIT_KHR;
+
 	if ((info->flags & ~supported_flags) != 0)
 		return false;
 
@@ -2305,6 +2308,12 @@ bool FeatureFilter::Impl::pipeline_layout_is_supported(const VkPipelineLayoutCre
 
 	if ((info->flags & VK_PIPELINE_LAYOUT_CREATE_INDEPENDENT_SETS_BIT_EXT) != 0 &&
 	    features.graphics_pipeline_library.graphicsPipelineLibrary == VK_FALSE)
+	{
+		return false;
+	}
+
+	if ((info->flags & VK_PIPELINE_LAYOUT_CREATE_NO_TASK_SHADER_BIT_KHR) != 0 &&
+	    features.maintenance11.maintenance11 == VK_FALSE)
 	{
 		return false;
 	}
@@ -3501,7 +3510,7 @@ bool FeatureFilter::Impl::access_mask_is_supported(VkAccessFlags2 access) const
 		return false;
 
 	if ((access & (VK_ACCESS_2_MICROMAP_WRITE_BIT_EXT | VK_ACCESS_2_MICROMAP_READ_BIT_EXT)) != 0 &&
-	    features.opacity_micromap.micromap == VK_FALSE)
+	    features.opacity_micromap_ext.micromap == VK_FALSE)
 		return false;
 
 	if ((access & (VK_ACCESS_2_COMMAND_PREPROCESS_READ_BIT_EXT |
@@ -3660,7 +3669,7 @@ bool FeatureFilter::Impl::pipeline_stage_mask_is_supported(VkPipelineStageFlags2
 		return false;
 
 	if ((stages & VK_PIPELINE_STAGE_2_MICROMAP_BUILD_BIT_EXT) != 0 &&
-	    features.opacity_micromap.micromap == VK_FALSE)
+	    features.opacity_micromap_ext.micromap == VK_FALSE)
 		return false;
 
 	if ((stages & VK_PIPELINE_STAGE_COMMAND_PREPROCESS_BIT_EXT) != 0 &&
@@ -4441,7 +4450,8 @@ bool FeatureFilter::Impl::graphics_pipeline_is_supported(const VkGraphicsPipelin
 			VK_PIPELINE_CREATE_2_PER_LAYER_FRAGMENT_DENSITY_BIT_VALVE |
 			VK_PIPELINE_CREATE_2_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT |
 			VK_PIPELINE_CREATE_2_64_BIT_INDEXING_BIT_EXT |
-			VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT;
+			VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT |
+			VK_PIPELINE_CREATE_2_OPACITY_MICROMAP_DISALLOW_MIXED_SPECIAL_INDEX_BIT_KHR;
 
 	auto flags = get_effective_flags(info);
 
@@ -4526,6 +4536,10 @@ bool FeatureFilter::Impl::graphics_pipeline_is_supported(const VkGraphicsPipelin
 
 	if ((flags & VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT) != 0 &&
 		features.descriptor_heap.descriptorHeap == VK_FALSE)
+		return false;
+
+	if ((flags & VK_PIPELINE_CREATE_2_OPACITY_MICROMAP_DISALLOW_MIXED_SPECIAL_INDEX_BIT_KHR) != 0 &&
+		features.opacity_micromap_khr.micromap == VK_FALSE)
 		return false;
 
 	const VkDynamicState *dynamic_states = nullptr;
@@ -4838,7 +4852,8 @@ bool FeatureFilter::Impl::compute_pipeline_is_supported(const VkComputePipelineC
 			VK_PIPELINE_CREATE_2_RAY_TRACING_ALLOW_SPHERES_AND_LINEAR_SWEPT_SPHERES_BIT_NV |
 			VK_PIPELINE_CREATE_2_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT |
 			VK_PIPELINE_CREATE_2_64_BIT_INDEXING_BIT_EXT |
-			VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT;
+			VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT |
+			VK_PIPELINE_CREATE_2_OPACITY_MICROMAP_DISALLOW_MIXED_SPECIAL_INDEX_BIT_KHR;
 
 	auto flags = get_effective_flags(info);
 
@@ -4888,6 +4903,10 @@ bool FeatureFilter::Impl::compute_pipeline_is_supported(const VkComputePipelineC
 		features.descriptor_heap.descriptorHeap == VK_FALSE)
 		return false;
 
+	if ((flags & VK_PIPELINE_CREATE_2_OPACITY_MICROMAP_DISALLOW_MIXED_SPECIAL_INDEX_BIT_KHR) != 0 &&
+	    features.opacity_micromap_khr.micromap == VK_FALSE)
+		return false;
+
 	if (!subgroup_size_control_is_supported(info->stage))
 		return false;
 
@@ -4922,7 +4941,8 @@ bool FeatureFilter::Impl::raytracing_pipeline_is_supported(const VkRayTracingPip
 			VK_PIPELINE_CREATE_2_RAY_TRACING_ALLOW_SPHERES_AND_LINEAR_SWEPT_SPHERES_BIT_NV |
 			VK_PIPELINE_CREATE_2_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT |
 			VK_PIPELINE_CREATE_2_64_BIT_INDEXING_BIT_EXT |
-			VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT;
+			VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT |
+			VK_PIPELINE_CREATE_2_OPACITY_MICROMAP_DISALLOW_MIXED_SPECIAL_INDEX_BIT_KHR;
 
 	auto flags = get_effective_flags(info);
 
@@ -4953,8 +4973,12 @@ bool FeatureFilter::Impl::raytracing_pipeline_is_supported(const VkRayTracingPip
 	    features.ray_tracing_motion_blur_nv.rayTracingMotionBlur == VK_FALSE)
 		return false;
 
-	if ((flags & VK_PIPELINE_CREATE_RAY_TRACING_OPACITY_MICROMAP_BIT_EXT) != 0 &&
-	    features.opacity_micromap.micromap == VK_FALSE)
+	if ((flags & VK_PIPELINE_CREATE_RAY_TRACING_OPACITY_MICROMAP_BIT_KHR) != 0 &&
+	    features.opacity_micromap_ext.micromap == VK_FALSE && features.opacity_micromap_khr.micromap == VK_FALSE)
+		return false;
+
+	if ((flags & VK_PIPELINE_CREATE_2_OPACITY_MICROMAP_DISALLOW_MIXED_SPECIAL_INDEX_BIT_KHR) != 0 &&
+		features.opacity_micromap_khr.micromap == VK_FALSE)
 		return false;
 
 	if ((flags & (VK_PIPELINE_CREATE_PROTECTED_ACCESS_ONLY_BIT_EXT |
