@@ -5128,6 +5128,11 @@ bool FeatureFilter::supports_maintenance4() const
 	       impl->api_version >= VK_MAKE_VERSION(1, 3, 0);
 }
 
+bool FeatureFilter::supports_maintenance9() const
+{
+	return impl->null_device || impl->features.maintenance9.maintenance9;
+}
+
 void FeatureFilter::set_device_query_interface(DeviceQueryInterface *iface)
 {
 	impl->query = iface;

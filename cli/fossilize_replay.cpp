@@ -2400,6 +2400,8 @@ struct ThreadedReplayer : StateCreatorInterface
 		{
 			auto start_time = chrono::steady_clock::now();
 			spv_target_env env;
+			if (device->get_api_version() >= VK_VERSION_1_4)
+				env = SPV_ENV_VULKAN_1_4;
 			if (device->get_api_version() >= VK_VERSION_1_3)
 				env = SPV_ENV_VULKAN_1_3;
 			else if (device->get_api_version() >= VK_VERSION_1_2)
@@ -2415,6 +2417,11 @@ struct ThreadedReplayer : StateCreatorInterface
 			bool unexpected_failure = false;
 
 			validation_opts.SetScalarBlockLayout(device->get_feature_filter().supports_scalar_block_layout());
+			validation_opts.SetAllowVulkan32BitBitwise(device->get_feature_filter().supports_maintenance9());
+
+			// Speed boost.
+			validation_opts.SetFriendlyNames(false);
+
 			context.SetMessageConsumer([&](spv_message_level_t, const char *, const spv_position_t &, const char *message) {
 				if (strstr(message, "08721") || strstr(message, "08722"))
 				{

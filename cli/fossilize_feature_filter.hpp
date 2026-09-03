@@ -159,6 +159,7 @@ struct VulkanFeatures
 	VkPhysicalDeviceCooperativeMatrixConversionFeaturesQCOM cooperative_matrix_conversion;
 	VkPhysicalDeviceShaderMixedFloatDotProductFeaturesVALVE shader_mixed_dot_product;
 	VkPhysicalDeviceMaintenance8FeaturesKHR maintenance8;
+	VkPhysicalDeviceMaintenance9FeaturesKHR maintenance9;
 	VkPhysicalDeviceMaintenance11FeaturesKHR maintenance11;
 	VkPhysicalDeviceCooperativeMatrixMaintenance1FeaturesEXT cooperative_matrix_maintenance1;
 
@@ -267,6 +268,7 @@ public:
 
 	bool supports_scalar_block_layout() const;
 	bool supports_maintenance4() const;
+	bool supports_maintenance9() const;
 
 private:
 	struct Impl;

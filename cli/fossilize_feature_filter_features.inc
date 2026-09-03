@@ -145,6 +145,7 @@ FE(SHADER_FMA, shader_fma, KHR);
 FE(PUSH_CONSTANT_BANK, push_constant_bank_nv, NV);
 FE(SHADER_SUBGROUP_PARTITIONED, shader_subgroup_partitioned, EXT);
 FE(MAINTENANCE_8, maintenance8, KHR);
+FE(MAINTENANCE_9, maintenance9, KHR);
 FE(MAINTENANCE_10, maintenance10, KHR);
 FE(MAINTENANCE_11, maintenance11, KHR);
 FE(CUSTOM_RESOLVE, custom_resolve, EXT);
